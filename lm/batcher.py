@@ -108,5 +108,16 @@ class PreBatched(QueueBatcher):
         return self.current_data[self.counter-1]
 
     def sequence_iterator(self, batch):
-        for seq in batch:
-            yield seq
+        for seq in [batch]:
+            if len(seq.inputs) <= self.batch_size:
+                inputs = np.pad(seq.inputs, [(0, self.batch_size - len(seq.inputs)), (0, 0)], "constant")
+                targets = np.pad(seq.targets, [(0, self.batch_size - len(seq.targets)), (0, 0)], "constant")
+                actual_lengths = np.pad(seq.actual_lengths, (0, self.batch_size - len(seq.actual_lengths)), "constant")
+                masks = np.pad(seq.masks, [(self.batch_size - len(seq.masks), 0), (0, 0), (0, 0)], "constant")
+            else:
+                inputs = np.array([seq.inputs[i] for i in range(self.batch_size)])
+                targets = np.array([seq.targets[i] for i in range(self.batch_size)])
+                actual_lengths = [seq.actual_lengths[i] for i in range(self.batch_size)]
+                masks = np.array([seq.masks[i] for i in range(self.batch_size)])
+            masks = np.transpose(masks, (0, 2, 1))
+            yield inputs, targets, masks, seq.identifier_usage, actual_lengths

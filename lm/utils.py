@@ -53,10 +53,11 @@ def create_model(config, is_training):
 
 def attention_masks(attns, masks, length):
     lst = []
+    masks = np.array(masks)
     if "full" in attns:
         lst.append(np.ones([1, length]))
     if "identifiers" in attns:
-        lst.append(masks[:, 0:length] if len(masks.shape) == 2 else np.reshape(masks[0:length], [1, length]))
+        [lst.append(masks[:, 0:length] if len(masks.shape) == 2 else np.reshape(masks[0:length], [1, length])) for _ in attns]
 
     return np.transpose(np.concatenate(lst)) if lst else np.zeros([0, length])
 
@@ -88,7 +89,7 @@ def save_model(saver, sess, path, model, config):
     if not os.path.exists(path):
         os.makedirs(path)
 
-    now = datetime.now().strftime("%Y-%m-%d--%H-%M--%f")
+    now = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M--%f")
     out_path = os.path.join(path, now + "/")
 
     tf.train.write_graph(model.graph.as_graph_def(), out_path, 'model.pb', as_text=False)

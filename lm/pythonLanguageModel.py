@@ -2,6 +2,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+import sys
+sys.path.append('github-scraper')
+
 import astwalker
 import evaluation
 import prebatcher
@@ -15,35 +18,33 @@ import datetime
 
 from Trainer import Trainer
 from batcher import QueuedSequenceBatcher, PreBatched
-from tfrnn.hooks import SpeedHook, LossHook, SaveModelHook
+from hooks import SpeedHook, LossHook, SaveModelHook
 from hooks import PerplexityHook
 
-from tfrnn.util import save_model, load_model, load_variables
+from utils import save_model, load_model, load_variables
 from utils import get_file_list, copy_temp_files, create_model
-
-import sys
 
 flags = tf.flags
 
-flags.DEFINE_string("data_path", "/Users/avishkar/pythonRepos", "data path")
+flags.DEFINE_string("data_path", "/data_normalised", "data path")
 flags.DEFINE_boolean("train", False, "train the model")
-flags.DEFINE_boolean("test", False, "test the model")
+flags.DEFINE_boolean("test", True, "test the model")
 flags.DEFINE_boolean("preprocess", False, "Proprocess data")
 flags.DEFINE_boolean("prebatch", False, "Pre-batch and split the data")
 flags.DEFINE_boolean("vocab", False, "Generate vocab")
 flags.DEFINE_string("list_file", "train_files.txt", "Name of the list file found in data_path")
 flags.DEFINE_string("vocab_file", "mapping.map", "Name of the vocab file in data_path")
-flags.DEFINE_string("output_file", None, "Name of the output file")
+flags.DEFINE_string("output_file", "/data_normalised/out/all_train_data.dat", "Name of the output file")
 flags.DEFINE_boolean("debug", False, "Use debug config")
 flags.DEFINE_integer("seq_length", 100, "Sequence length")
 flags.DEFINE_integer("batch_size", 100, "Batch size")
-flags.DEFINE_integer("num_partitions", None, "Data partitions")
+flags.DEFINE_integer("num_partitions", 10, "Data partitions")
 flags.DEFINE_boolean("use_prebatched", True, "Use prebatched data")
 flags.DEFINE_boolean("copy_temp", False, "Copy data to local temp directory")
 flags.DEFINE_integer("oov_threshold", 10, "Out of vocabulary threshold")
-flags.DEFINE_integer("epochs", 50, "Number of epochs to run")
-flags.DEFINE_string("attention", None, "Use the attention model")
-flags.DEFINE_string("attention_variant", None, "Variation of attention model to use. Possible values are: "
+flags.DEFINE_integer("epochs", 10, "Number of epochs to run")
+flags.DEFINE_string("attention", "identifiers" and "", "Use the attention model")
+flags.DEFINE_string("attention_variant", "input", "Variation of attention model to use. Possible values are: "
                                                "input, output")
 flags.DEFINE_float("init_scale", 0.1, "Initialisation scale")
 flags.DEFINE_integer("max_grad_norm", 5, "Maximum norm for gradients")
@@ -55,7 +56,7 @@ flags.DEFINE_integer("status_iterations", 1000, "Number of iterations before sta
 flags.DEFINE_integer("max_attention", 10, "Maximum size of attention matrix")
 flags.DEFINE_float("learning_rate", 1.0, "Gradient Descent Learning Rate")
 flags.DEFINE_float("lr_decay", 0.9, "Learning rate decay factor")
-flags.DEFINE_string("model_path", None, "Model parameters to load. If train=True, "
+flags.DEFINE_string("model_path", "./out/model/latest" and "", "Model parameters to load. If train=True, "
                                         "will continue training from these parameters. If test=True,"
                                         "will test using these model parameters")
 flags.DEFINE_string("lambda_type", "state", "Method to calculate lambda, possible values are fixed, state, att, input."

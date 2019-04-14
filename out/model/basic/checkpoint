@@ -1,0 +1,2 @@
+model_checkpoint_path: "embedding.tf"
+all_model_checkpoint_paths: "embedding.tf"

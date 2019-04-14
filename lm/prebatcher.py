@@ -16,7 +16,7 @@ def run_prebatch(data_path, set, config):
     files = [y for x in os.walk(data_path) for y in iglob(os.path.join(x[0], pattern))]
     print("Found %d partitions for %s data" % (len(files), set))
     for file in files:
-        batcher = QueuedSequenceBatcher([file], config.input_seq_length, config.batch_size, description=set,
+        batcher = QueuedSequenceBatcher([file], config.seq_length, config.batch_size, description=set,
                                         attns=config.attention)
         file_data = []
         for batch in batcher:

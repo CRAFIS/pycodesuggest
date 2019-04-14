@@ -13,7 +13,7 @@ from hooks import GeneratorHook, PerplexityHook, TopKAccuracyHook
 from pyreader import oov_id
 from batcher import PreBatched, QueuedSequenceBatcher
 from termcolor import print_color, gray, rgb
-from tfrnn.util import load_model
+from utils import load_model
 from utils import *
 import seaborn as sns
 
@@ -488,12 +488,12 @@ def map_token(map, token):
     if "|" in token:
         spl = token.split("|")
         if spl[1] in map:
-            return map[spl[1]]
+            return (map[spl[1]],)
         elif spl[0] in map:
-            return map[spl[0]]
+            return (map[spl[0]],)
 
     elif any([token.startswith(prefix) for prefix in astwalker.possible_types()]):
-        return pyreader.oov_id
+        return (pyreader.oov_id,)
 
     raise KeyError(token)
 
@@ -611,29 +611,29 @@ class BeamSearch2:
         self.beam_width = beam_width
 
     def __call__(self, session, depth):
-        def run_network(token_id, state, att_states, att_counts):
+        def run_network(token_id, state, att_states, att_ids, att_counts):
             att_mask = attention_masks(self.attns, [0], 1)
-            data = (np.array([[token_id]]), np.array([[1]]), np.array([att_mask]), np.array([1]))
-            feed_dict = construct_feed_dict(self.model, data, state, att_states, att_counts)
+            data = (np.array([[token_id]]), np.array([[1]]), np.array([att_mask]), np.array([1]), np.array([1]))
+            feed_dict, _ = construct_feed_dict(self.model, data, state, att_states, att_ids, att_counts)
 
             results = session.run(evals, feed_dict)
-            results, state, att_states, att_counts, _, _ = extract_results(results, evals, 2, self.model)
+            results, state, att_states, _, _, att_counts, _ = extract_results(results, evals, 2, self.model)
             return results, state, att_states, att_counts
 
-        def beam(tree_node):
+        def beam(tree_node, att_ids):
             # Populate the children of tree_node
             init_state, init_att_states, init_att_counts = tree_node.state
-            results, state, att_states, att_counts = run_network(tree_node.token_id, init_state, init_att_states, init_att_counts)
+            results, state, att_states, att_counts = run_network(tree_node.token_id, init_state, init_att_states, att_ids, init_att_counts)
             probs = results[0]
             predict_ids = results[1]
             for i in range(self.beam_width):
-                tree_node.add_child(BeamSearchTreeNode(predict_ids[0, i], (state, att_states, att_counts), probs[0, i]))
+                tree_node.add_child(BeamSearchTreeNode(predict_ids[0, i], None, (state, att_states, att_counts), probs[0, i]))
 
-        def beam_search_recursive(tree, current_depth):
+        def beam_search_recursive(tree, current_depth, att_ids):
             if current_depth < depth:
                 for child in tree.children:
-                    beam(child)
-                    beam_search_recursive(child, current_depth+1)
+                    beam(child, att_ids)
+                    beam_search_recursive(child, current_depth+1, att_ids)
 
         to_eval = [self.prediction_op[0], self.prediction_op[1]]
         evals = get_evals(to_eval, self.model)
@@ -641,27 +641,32 @@ class BeamSearch2:
         accurate = 0
 
         for testcase in all_test_cases:
-            state, att_states, att_counts = get_initial_state(self.model)
+            state, att_states, att_ids, att_counts = get_initial_state(self.model)
 
             for i, token in enumerate(testcase[:-depth]):
-                results, state, att_states, att_counts = run_network(map_token(self.map, token), state, att_states, att_counts)
+                try:
+                    results, state, att_states, att_counts = run_network(map_token(self.map, token)[0], state, att_states, att_ids, att_counts)
 
-                root = BeamSearchTreeNode(map_token(self.map, testcase[-1]), (state, att_states, att_counts), 1)
-                beam(root)
-                beam_search_recursive(root, 1)
-                path = find_path(root)[0]  # The most likely path
-                actual = [map_token(self.map, t) for t in testcase[i+1:i+depth+1]]
+                    root = BeamSearchTreeNode(map_token(self.map, testcase[-1])[0], None, (state, att_states, att_counts), 1)
+                    beam(root, att_ids)
+                    beam_search_recursive(root, 1, att_ids)
+                    path = find_path(root)[0]  # The most likely path
+                    actual = [map_token(self.map, t)[0] for t in testcase[i+1:i+depth+1]]
 
-                # print("Token: %s" % token)
-                # print("Predicted:")
-                # print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in path]))
-                # print("Actual:")
-                # print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in actual]))
-                # print("\n")
+                    """
+                    print("Token: %s" % token)
+                    print("Predicted:")
+                    print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in path]))
+                    print("Actual:")
+                    print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in actual]))
+                    print("\n")
+                    """
 
-                count += 1
-                if path == actual:
-                    accurate += 1
+                    count += 1
+                    if path == actual:
+                        accurate += 1
+                except KeyError as e:
+                    print(e)
 
         print("Accuracy: %f" % (accurate/count))
 

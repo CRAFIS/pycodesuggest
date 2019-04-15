@@ -5,6 +5,7 @@ from glob import iglob
 import hashlib
 import sys
 import getopt
+import random
 
 from io import StringIO
 
@@ -27,6 +28,8 @@ def split_files(path):
 
     python_files = [(directory, [y for x in os.walk(directory) for y in iglob(os.path.join(x[0], '*.py'))])
                 for directory in subdirectories]
+    python_files = [python_file for dir in python_files for python_file in dir[1]]
+    python_files = random.sample(python_files, len(python_files))
 
     train_files = []
     valid_files = []
@@ -42,6 +45,10 @@ def split_files(path):
 
     for project in python_files[valid_split:]:
         test_files.extend([f[len(path)+1:] for f in project[1]])
+
+    train_files = python_files[:train_split]
+    valid_files = python_files[train_split:valid_split]
+    test_files = python_files[valid_split:]
 
     def write_to_file(fname, lst):
         with open(os.path.join(path, fname), "w") as write_file:
@@ -307,7 +314,7 @@ def main(argv):
         sys.exit(2)
 
     split_files(path)
-    corpus_stats(path)
+    #corpus_stats(path)
 
 
 if __name__ == "__main__":

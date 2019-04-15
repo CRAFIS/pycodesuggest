@@ -27,8 +27,8 @@ from utils import get_file_list, copy_temp_files, create_model
 flags = tf.flags
 
 flags.DEFINE_string("data_path", "/data_normalised", "data path")
-flags.DEFINE_boolean("train", False, "train the model")
-flags.DEFINE_boolean("test", True, "test the model")
+flags.DEFINE_boolean("train", True, "train the model")
+flags.DEFINE_boolean("test", False, "test the model")
 flags.DEFINE_boolean("preprocess", False, "Proprocess data")
 flags.DEFINE_boolean("prebatch", False, "Pre-batch and split the data")
 flags.DEFINE_boolean("vocab", False, "Generate vocab")
@@ -42,7 +42,7 @@ flags.DEFINE_integer("num_partitions", 10, "Data partitions")
 flags.DEFINE_boolean("use_prebatched", True, "Use prebatched data")
 flags.DEFINE_boolean("copy_temp", False, "Copy data to local temp directory")
 flags.DEFINE_integer("oov_threshold", 10, "Out of vocabulary threshold")
-flags.DEFINE_integer("epochs", 10, "Number of epochs to run")
+flags.DEFINE_integer("epochs", 50, "Number of epochs to run")
 flags.DEFINE_string("attention", "identifiers" and "", "Use the attention model")
 flags.DEFINE_string("attention_variant", "input", "Variation of attention model to use. Possible values are: "
                                                "input, output")
@@ -56,7 +56,7 @@ flags.DEFINE_integer("status_iterations", 1000, "Number of iterations before sta
 flags.DEFINE_integer("max_attention", 10, "Maximum size of attention matrix")
 flags.DEFINE_float("learning_rate", 1.0, "Gradient Descent Learning Rate")
 flags.DEFINE_float("lr_decay", 0.9, "Learning rate decay factor")
-flags.DEFINE_string("model_path", "./out/model/latest" and "", "Model parameters to load. If train=True, "
+flags.DEFINE_string("model_path", "./out/model/latest" and None, "Model parameters to load. If train=True, "
                                         "will continue training from these parameters. If test=True,"
                                         "will test using these model parameters")
 flags.DEFINE_string("lambda_type", "state", "Method to calculate lambda, possible values are fixed, state, att, input."

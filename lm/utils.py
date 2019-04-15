@@ -57,7 +57,7 @@ def attention_masks(attns, masks, length):
     if "full" in attns:
         lst.append(np.ones([1, length]))
     if "identifiers" in attns:
-        [lst.append(masks[:, 0:length] if len(masks.shape) == 2 else np.reshape(masks[0:length], [1, length])) for _ in attns]
+        lst.append(masks[:, 0:length] if len(masks.shape) == 2 else np.reshape(masks[0:length], [1, length]))
 
     return np.transpose(np.concatenate(lst)) if lst else np.zeros([0, length])
 

@@ -86,25 +86,30 @@ class SpeedHook(TraceHook):
 
 
 class AccuracyHook(TraceHook):
-    def __init__(self, summary_writer, batcher, placeholders, at_every_epoch):
+    def __init__(self, summary_writer, batcher, model, vocab, at_every_epoch=1):
         super(AccuracyHook, self).__init__(summary_writer)
         self.batcher = batcher
-        self.placeholders = placeholders
+        self.model = model
+        self.vocab = {v: k for k, v in vocab.items()}
         self.at_every_epoch = at_every_epoch
 
-    def __call__(self, sess, epoch, iteration, model, loss, processed):
+    def __call__(self, sess, epoch, iteration, logits, loss, processed):
         if iteration == 0 and epoch % self.at_every_epoch == 0:
             total = 0
             correct = 0
             for values in self.batcher:
-                total += len(values[-1])
-                feed_dict = {}
-                for i in range(0, len(self.placeholders)):
-                    feed_dict[self.placeholders[i]] = values[i]
-                truth = np.argmax(values[-1], 1)
-                predicted = sess.run(tf.arg_max(tf.nn.softmax(model), 1),
+                total += values.actual_lengths[0]
+                data = [data for data in self.batcher.sequence_iterator(values)][0]
+                state, att_states, att_ids, att_counts = get_initial_state(self.model)
+                feed_dict, identifier_usage = construct_feed_dict(self.model, data, state, att_states, att_ids, att_counts)
+                truth = values.targets[0]
+                predicted = sess.run(tf.arg_max(tf.nn.softmax(logits), 1),
                                      feed_dict=feed_dict)
-                correct += sum(truth == predicted)
+                truth = [self.vocab[id] for id in truth if id != 0]
+                predicted = [self.vocab[id] for id in predicted if id != 0]
+                correct += sum([1 if t == p else 0 for t, p in zip(truth, predicted)])
+                print(correct, "/", total , "=", float(correct) / total)
+                print([1 if t == p else 0 for t, p in zip(truth, predicted)])
             acc = float(correct) / total
             self.update_summary(sess, iteration, ACCURACY_TRACE_TAG, acc)
             print("Epoch " + str(epoch) +
@@ -261,7 +266,7 @@ class TopKAccuracyHook(TraceHook):
                 batch_size = self.model.config.batch_size
 
                 actual_lengths = actual_lengths.astype("int")
-                for i in range(batch_size):
+                for i in range(len(identifier_usage)):
                     identifier_usage[i, actual_lengths[i]:] = 0
                     non_identifier_usage[i, actual_lengths[i]:] = 0
 
@@ -271,8 +276,8 @@ class TopKAccuracyHook(TraceHook):
 
                 for i, k in enumerate(self.ks):
                     accuracy[k] += sum(results[i])
-                    accuracy_vals_identifiers[k] += sum(sum(np.reshape(results[i], [batch_size, seq_len]) * identifier_usage))
-                    accuracy_vals_nonidentifiers[k] += sum(sum(np.reshape(results[i], [batch_size, seq_len]) * non_identifier_usage))
+                    accuracy_vals_identifiers[k] += sum(sum(np.reshape(results[i], [batch_size, seq_len]) * [identifier_usage[0]]))
+                    accuracy_vals_nonidentifiers[k] += sum(sum(np.reshape(results[i], [batch_size, seq_len]) * [non_identifier_usage[0]]))
 
             iterate_batch(self.top_k_ops, self.model, self.batcher, sess, iter_hook)
 

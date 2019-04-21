@@ -9,7 +9,7 @@ import pyreader
 from BeamSearchTree import BeamSearchTreeNode
 from Trainer import get_initial_state, construct_feed_dict, extract_results, get_evals
 from beamSearch import find_path
-from hooks import GeneratorHook, PerplexityHook, TopKAccuracyHook
+from hooks import GeneratorHook, PerplexityHook, TopKAccuracyHook, AccuracyHook
 from pyreader import oov_id
 from batcher import PreBatched, QueuedSequenceBatcher
 from termcolor import print_color, gray, rgb
@@ -60,7 +60,7 @@ def run_tests(config, model_config, data_path, word_to_id):
         # top_predict(session)
 
         beam_search = BeamSearch2(generator_model, word_to_id, model_config.attention, 5)
-        beam_search(session, 2)
+        #beam_search(session, 2)
 
         test_pattern = config.data_pattern.replace("{-type-}", "test") + ".part*"
         files = get_file_list(config, data_path, test_pattern, "test")
@@ -71,29 +71,32 @@ def run_tests(config, model_config, data_path, word_to_id):
             print("Copying data files to %s" % temp_dir)
             files = copy_temp_files(files, temp_dir)
 
-        #batcher = PreBatched(files, config.batch_size, description="test") if config.use_prebatched \
-        #    else QueuedSequenceBatcher(files, config.seq_length, config.batch_size, description="test",
-        #                               attns=model_config.attention)
+        batcher = PreBatched(files, config.batch_size, description="test") if config.use_prebatched \
+            else QueuedSequenceBatcher(files, config.seq_length, config.batch_size, description="test",
+                                       attns=model_config.attention)
 
 
-        #perplexity = PerplexityHook(None, model, batcher)
-        #perplexity(session, 1, 0, model.logits, 0, 0)
+        perplexity = PerplexityHook(None, model, batcher)
+        perplexity(session, 1, 0, model.logits, 0, 0)
 
-        #accuracy = TopKAccuracyHook(None, model, batcher, [1, 5])
-        #accuracy(session, 1, 0, model.logits, 0, 0)
+        accuracy = AccuracyHook(None, batcher, model, word_to_id)
+        accuracy(session, 1, 0, model.logits, 0, 0)
 
-        # list = ListPredictions(generator_model, word_to_id, data_path)
-        # list(session)
+        accuracy = TopKAccuracyHook(None, model, batcher, [1, 5])
+        accuracy(session, 1, 0, model.logits, 0, 0)
 
-        #if model.is_attention_model:
-            # vis = AttentionVisualiser(generator_model, word_to_id, data_path,
-            #                          model_config.max_attention, model_config.attention)
-            # vis(session)
+        list = ListPredictions(generator_model, word_to_id, data_path)
+        list(session)
 
-            #vis = LaggedAttentionVisualisation(generator_model, word_to_id, data_path,
-            #                                   model_config.max_attention, model_config.attention)
+        if model.is_attention_model:
+            vis = AttentionVisualiser(generator_model, word_to_id, data_path,
+                                      model_config.max_attention, model_config.attention)
+            vis(session)
 
-            #vis(session)
+            vis = LaggedAttentionVisualisation(generator_model, word_to_id, data_path,
+                                               model_config.max_attention, model_config.attention)
+
+            vis(session)
 
         # profiler = Profiler(model, batcher)
         # profiler.profile(session)
@@ -653,20 +656,18 @@ class BeamSearch2:
                     path = find_path(root)[0]  # The most likely path
                     actual = [map_token(self.map, t)[0] for t in testcase[i+1:i+depth+1]]
 
-                    """
                     print("Token: %s" % token)
                     print("Predicted:")
                     print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in path]))
                     print("Actual:")
                     print(" ".join([self.inv_map[t].replace("\n", "<newline>") for t in actual]))
                     print("\n")
-                    """
 
                     count += 1
                     if path == actual:
                         accurate += 1
                 except KeyError as e:
-                    print(e)
+                    pass
 
         print("Accuracy: %f" % (accurate/count))
 

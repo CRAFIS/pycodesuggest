@@ -108,8 +108,6 @@ class AccuracyHook(TraceHook):
                 truth = [self.vocab[id] for id in truth if id != 0]
                 predicted = [self.vocab[id] for id in predicted if id != 0]
                 correct += sum([1 if t == p else 0 for t, p in zip(truth, predicted)])
-                print(correct, "/", total , "=", float(correct) / total)
-                print([1 if t == p else 0 for t, p in zip(truth, predicted)])
             acc = float(correct) / total
             self.update_summary(sess, iteration, ACCURACY_TRACE_TAG, acc)
             print("Epoch " + str(epoch) +

@@ -247,7 +247,7 @@ if __name__ == "__main__":
     adjust_flags()
     validate_flags()
     print_flags(FLAGS)
-    mode = input()
+    mode = input("Mode >> ")
 
     for flag in mode_flags:
         if mode_flags[flag][0] or mode == flag:

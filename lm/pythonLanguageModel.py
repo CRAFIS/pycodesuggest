@@ -250,7 +250,7 @@ if __name__ == "__main__":
     mode = input()
 
     for flag in mode_flags:
-        if mode_flags[flag][0] or mode == mode_flags[flag]:
+        if mode_flags[flag][0] or mode == flag:
             print("Tensorflow version: %s" % tf.__version__)
             print("Running %s\n-------------\n" % flag)
             t0 = datetime.datetime.now()

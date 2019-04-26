@@ -16,6 +16,7 @@ def normalise(path):
     dirname = split[1]
 
     normalised_target_path = os.path.join(base, dirname + "_normalised")
+    normalised_target_path = "/data_normalised"
     processed_file_path = os.path.join(path, "processed.txt")
 
     print("Writing normalised files to %s" % normalised_target_path)

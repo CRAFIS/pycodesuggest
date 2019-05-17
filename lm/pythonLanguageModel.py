@@ -15,6 +15,7 @@ import os
 import shutil
 import tempfile
 import datetime
+import argparse
 
 from Trainer import Trainer
 from batcher import QueuedSequenceBatcher, PreBatched
@@ -247,10 +248,14 @@ if __name__ == "__main__":
     adjust_flags()
     validate_flags()
     print_flags(FLAGS)
-    mode = input("Mode >> ")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode')
+    parser.add_argument('--path')
+    args = parser.parse_args()
+    FLAGS.data_path = args.path if args.path else FLAGS.data_path
 
     for flag in mode_flags:
-        if mode_flags[flag][0] or mode == flag:
+        if mode_flags[flag][0] or args.mode == flag:
             print("Tensorflow version: %s" % tf.__version__)
             print("Running %s\n-------------\n" % flag)
             t0 = datetime.datetime.now()

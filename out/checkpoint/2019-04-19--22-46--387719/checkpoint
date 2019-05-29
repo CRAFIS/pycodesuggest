@@ -1,0 +1,6 @@
+model_checkpoint_path: "model.tf"
+all_model_checkpoint_paths: "../2019-04-18--10-45--610757/model.tf"
+all_model_checkpoint_paths: "../2019-04-18--19-31--948994/model.tf"
+all_model_checkpoint_paths: "../2019-04-19--03-38--453641/model.tf"
+all_model_checkpoint_paths: "../2019-04-19--14-22--181440/model.tf"
+all_model_checkpoint_paths: "model.tf"

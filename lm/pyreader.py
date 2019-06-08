@@ -83,7 +83,7 @@ def preprocess(tokentype, tokenval):
 
 def build_vocab(data, oov_threshold, force_include=None):
     force_include = force_include or []
-    counter = collections.Counter(itertools.chain(itertools.chain(*data), force_include))
+    counter = collections.Counter(itertools.chain(itertools.chain(*[set(d) for d in data]), force_include))
     count_pairs = sorted(counter.items(), key=lambda x: -x[1])
 
     count_pairs = (p for p in count_pairs if p[1] > oov_threshold or p[0] in force_include)

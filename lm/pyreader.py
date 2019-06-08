@@ -16,7 +16,7 @@ oov_token, oov_id = "§OOV§", 1
 indent_token = "§<indent>§"
 dedent_token = "§<dedent>§"
 number_token = "§NUM§"
-
+string_token = "§STRING§"
 
 class Container:
     def __init__(self, inputs, targets, actual_lengths, masks, identifier_usage):
@@ -74,6 +74,9 @@ def preprocess(tokentype, tokenval):
 
     elif tokentype == tokenize.DEDENT:
         return dedent_token
+
+    elif tokentype == tokenize.STRING:
+        return string_token
 
     return tokenval
 

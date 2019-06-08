@@ -12,7 +12,6 @@ from beamSearch import find_path
 from hooks import GeneratorHook, PerplexityHook, TopKAccuracyHook, AccuracyHook
 from pyreader import oov_id
 from batcher import PreBatched, QueuedSequenceBatcher
-from termcolor import print_color, gray, rgb
 from utils import load_model
 from utils import *
 import seaborn as sns

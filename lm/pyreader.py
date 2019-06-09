@@ -107,7 +107,7 @@ def get_data(path, listfile, seq_length, word_to_id):
 
     # Prevent indent and dedent tokens from being flagged as variables, which can occur because dedent
     # in particular takes up no columns
-    non_vars = [word_to_id[indent_token], word_to_id[dedent_token]]
+    non_vars = [indent_token, dedent_token]
 
     for j in range(len(all_data)):
         filedata = list(all_data[j])
@@ -124,7 +124,7 @@ def get_data(path, listfile, seq_length, word_to_id):
         for i in range(num_sequences):
             x = [t[0] for t in filedata[i * seq_length:(i + 1) * seq_length]]
             y = [t[0] for t in filedata[i * seq_length + 1:(i + 1) * seq_length + 1]]
-            masks = [[t[1] in fp and word_to_id[t[0]] not in non_vars for fp in file_positions]
+            masks = [[t[1] in fp and t[0] not in non_vars for fp in file_positions]
                      for t in filedata[i * seq_length:(i + 1) * seq_length]]
             # masks = [t[1] in file_positions and t[0] not in non_vars
             #          for t in filedata[i * seq_length:(i + 1) * seq_length]]

@@ -38,7 +38,7 @@ flags.DEFINE_string("output_file", "/data_normalised/out/all_train_data.dat", "N
 flags.DEFINE_boolean("debug", False, "Use debug config")
 flags.DEFINE_integer("seq_length", 100, "Sequence length")
 flags.DEFINE_integer("batch_size", 100, "Batch size")
-flags.DEFINE_integer("num_partitions", 10, "Data partitions")
+flags.DEFINE_integer("num_partitions", 1, "Data partitions")
 flags.DEFINE_boolean("use_prebatched", True, "Use prebatched data")
 flags.DEFINE_boolean("copy_temp", False, "Copy data to local temp directory")
 flags.DEFINE_integer("oov_threshold", 0, "Out of vocabulary threshold")

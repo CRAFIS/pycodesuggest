@@ -96,7 +96,7 @@ def build_vocab(data, oov_threshold, force_include=None):
 
 
 def get_data(path, listfile, seq_length, word_to_id):
-    all_data, def_positions, identifier_usage = read_data(path, listfile, word_to_id)
+    all_data, def_positions, identifier_usage = read_data(path, listfile, None)
     identifier_types = astwalker.possible_types()
     num_masks = len(identifier_types)
     def_positions = [[[t[1] for t in fp if t[0] == k] for k in identifier_types] for fp in def_positions]

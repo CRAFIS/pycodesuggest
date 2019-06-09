@@ -42,7 +42,7 @@ flags.DEFINE_integer("num_partitions", 10, "Data partitions")
 flags.DEFINE_boolean("use_prebatched", True, "Use prebatched data")
 flags.DEFINE_boolean("copy_temp", False, "Copy data to local temp directory")
 flags.DEFINE_integer("oov_threshold", 0, "Out of vocabulary threshold")
-flags.DEFINE_integer("remove_identifiers", False, "Remove identifiers from vocabulary")
+flags.DEFINE_boolean("remove_identifiers", False, "Remove identifiers from vocabulary")
 flags.DEFINE_integer("epochs", 50, "Number of epochs to run")
 flags.DEFINE_string("attention", "identifiers" or "", "Use the attention model")
 flags.DEFINE_string("attention_variant", "input", "Variation of attention model to use. Possible values are: "

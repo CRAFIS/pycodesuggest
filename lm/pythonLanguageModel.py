@@ -42,6 +42,7 @@ flags.DEFINE_integer("num_partitions", 10, "Data partitions")
 flags.DEFINE_boolean("use_prebatched", True, "Use prebatched data")
 flags.DEFINE_boolean("copy_temp", False, "Copy data to local temp directory")
 flags.DEFINE_integer("oov_threshold", 0, "Out of vocabulary threshold")
+flags.DEFINE_integer("remove_identifiers", False, "Remove identifiers from vocabulary")
 flags.DEFINE_integer("epochs", 50, "Number of epochs to run")
 flags.DEFINE_string("attention", "identifiers" or "", "Use the attention model")
 flags.DEFINE_string("attention_variant", "input", "Variation of attention model to use. Possible values are: "
@@ -191,6 +192,10 @@ def vocab(data_path, config):
 
     force_include = astwalker.possible_identifiers() if config.vocab_incl_ids else None
     word_to_id = pyreader.build_vocab(data_raw, config.oov_threshold, force_include=force_include)
+    if config.remove_identifiers:
+        print("Vocab size before: %d" % len(word_to_id))
+        word_to_id = {k: v for k, v in word_to_id.items() if k not in astwalker.possible_identifiers()}
+        word_to_id = {k: i for i, (k, v) in enumerate(sorted(word_to_id.items(), key = lambda x: x[1]))}
     outpath = os.path.join(data_path, config.vocab_file)
     with open(outpath, "wb") as f:
         pickle.dump(word_to_id, f)

@@ -115,8 +115,8 @@ def get_data(path, listfile, seq_length, word_to_id):
         identifier_positions = identifier_usage[j]
 
         num_sequences = math.ceil(len(filedata) / seq_length)
-        input_data = np.full([num_sequences, seq_length], pad_token)
-        targets = np.full([num_sequences, seq_length], pad_token)
+        input_data = np.full([num_sequences, seq_length], pad_token).astype("<U100")
+        targets = np.full([num_sequences, seq_length], pad_token).astype("<U100")
         masks_data = np.zeros([num_sequences, num_masks, seq_length]).astype("bool")
         id_usage_data = np.zeros([num_sequences, seq_length]).astype("bool")
         actual_lengths = []
